@@ -4,6 +4,7 @@ import urllib
 import re
 import json
 import sys
+import warnings
 import requests
 
 class UnmarkClient(object):
@@ -18,8 +19,8 @@ class UnmarkClient(object):
         self.password = password
         
         # Fetch CSRF Token
-        self.requests_session = requests.Session()
-        self._main_page_response = self.requests_session.get(self.server_address)
+        self.unmark_requests_session = requests.Session()
+        self._main_page_response = self.unmark_requests_session.get(self.server_address)
 
         if self._main_page_response.status_code == 200:
             self.csrf_token = re.findall('(?:unmark.vars.csrf_token\s+=\s+\')(.+)\';', self._main_page_response.text)[0]
@@ -30,7 +31,7 @@ class UnmarkClient(object):
 
         self.login_url = self.server_address + '/login'
 
-        login_response = self.requests_session.post(
+        login_response = self.unmark_requests_session.post(
             url=self.server_address+'/login',
             data={
                 'email': self.email,
@@ -56,17 +57,52 @@ class UnmarkClient(object):
                 return True # Success
 
     def add(self, url):
-        # Fetch the title of page from the URL
-        page_response = self.requests_session.get(url)
-        
-        page_title = re.findall('(?<=<title>).+?(?=</title>)', page_response.text, re.DOTALL)[0]
+        # Send a HEAD request first to url and determine the content-type
+        try:
+            page_response_head = requests.head(url)
+        except requests.ConnectionError as e:
+            print('Unable to create a connection to the given URL. Error = ' + str(e))
+            return False
+        except (requests.exceptions.InvalidSchema, requests.exceptions.MissingSchema) as e:
+            print('Given URL is invalid. Error = ' + str(e))
+            return False
+
+        content_type_string = page_response_head.headers['Content-Type'].lower()
+
+        # If the page is not a HTML code, then skip the check for <title>
+        if not content_type_string.startswith('text/html'):
+            warning_message = (
+                'Unknown Content-Type detected. '
+                'Will not attempt to get the title. '
+                'Content-Type = ' + str(content_type_string)            
+            )
+            
+            warnings.warn(warning_message, Warning, stacklevel=2)
+            
+            # Use url as a title
+            page_title = url
+        else:
+            # Fetch the whole page from the URL
+            try:
+                page_response = requests.get(url)
+            except requests.ConnectionError as e:
+                print('Unable to create a connection to the given URL. Error = ' + str(e))
+                return False
+            
+            # Extract <title> tag
+            try:
+                page_title = re.findall('(?<=<title>).+?(?=</title>)', page_response.text, re.DOTALL)[0]
+            except:
+                warning_message = 'Error while extracting <title> tag.'
+                warnings.warn(warning_message, Warning, stacklevel=2)
+                page_title = url
 
         add_payload = {
             'url': url,
             'title': page_title
         }
     
-        add_response = self.requests_session.get(
+        add_response = self.unmark_requests_session.get(
             'https://unmark.serv06.iamblogger.net/mark/add',
             params=add_payload,
             headers={
