@@ -120,17 +120,3 @@ class UnmarkClient(object):
                 raise Exception("Something isn't right with the response from the server. URL = " + add_response_json['mark']['url'] + ', active = '+add_response_json['mark']['active'])
         except:
             raise Exception("Error occurred while parsing the server response. Probably means the add request have failed.")
-            
-if __name__ == '__main__':
-    with open('config.json', 'r') as config_file:
-        config = json.load(config_file)
-    
-    server_address = config['server_address']
-    email = config['email']
-    password = config['password']
-    
-    client = UnmarkClient(server_address, email, password)
-    
-    client.login()
-    
-    client.add(str(sys.argv[1]))
