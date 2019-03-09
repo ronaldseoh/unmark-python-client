@@ -50,7 +50,7 @@ class UnmarkClient():
         if login_response.status_code != 200:
             raise Exception(
                 'Unable to connect to the login page. '
-                'Status code = '+str(self._main_page_response.status_code))
+                'Status code = '+str(login_response.status_code))
 
         # With internal XMLHttpRequest, responses are given in JSON
         login_response_json = json.loads(login_response.text)
