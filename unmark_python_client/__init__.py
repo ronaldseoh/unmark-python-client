@@ -71,13 +71,18 @@ class UnmarkClient():
             print('Given URL is invalid. Error = ' + str(e))
             return False
 
-        content_type_string = page_response_head.headers['Content-Type'].lower()
+        # Look for 'Content-Type' in the response header
+        # Sometimes headers have no 'Content-Type'
+        if 'Content-Type' in page_response_head.headers.keys():
+            content_type_string = page_response_head.headers['Content-Type'].lower()
+        else:
+            content_type_string = 'Content-Type Not Found'
 
         # If the page is not a HTML code, then skip the check for <title>
         if not content_type_string.startswith('text/html'):
             warning_message = (
-                'Unknown Content-Type detected. '
-                'Will not attempt to get the title. '
+                'Content-Type not found or unknown Content-Type detected. '
+                'Will not attempt to fetch the title. '
                 'Content-Type = ' + str(content_type_string)
             )
 
