@@ -109,6 +109,7 @@ class UnmarkClient():
                 warnings.warn(warning_message, Warning, stacklevel=2)
                 page_title = url
 
+        # Send request to Unmark server
         add_payload = {
             'url': url,
             'title': page_title
@@ -122,6 +123,7 @@ class UnmarkClient():
             }
         )
 
+        # Check the response from the server
         try:
             # With internal XMLHttpRequest, responses are given in JSON
             add_response_json = json.loads(add_response.text)
