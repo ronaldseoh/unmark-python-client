@@ -8,11 +8,9 @@ import warnings
 import requests
 
 class UnmarkClient():
-
     # I'm trying to make every request to Unmark server as internal XMLHttpRequest.
     # Details in https://github.com/cdevroe/unmark/wiki/Response-Logic
     def __init__(self, server_address, email, password):
-
         self.server_address = server_address
 
         self.email = email
@@ -32,7 +30,6 @@ class UnmarkClient():
                 'Status code = ' + str(self._main_page_response.status_code))
 
     def login(self):
-
         login_response = self.unmark_requests_session.post(
             url=self.server_address+'/login',
             data={
@@ -116,7 +113,7 @@ class UnmarkClient():
         }
 
         add_response = self.unmark_requests_session.get(
-            'https://unmark.serv06.iamblogger.net/mark/add',
+            self.server_address + '/mark/add',
             params=add_payload,
             headers={
                 'X-Requested-With': 'XMLHttpRequest'
